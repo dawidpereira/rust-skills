@@ -96,14 +96,14 @@ let data = Rc::new(build_tree());
 
 ### Decision Guide
 
-| Scenario | Use |
-|----------|-----|
-| Shared ownership, multi-thread | `Arc<T>` |
-| Shared ownership, single-thread | `Rc<T>` |
-| Shared + mutable, multi-thread | `Arc<Mutex<T>>` or `Arc<RwLock<T>>` |
-| Shared + mutable, single-thread | `Rc<RefCell<T>>` |
-| Unique ownership, heap-allocated | `Box<T>` |
-| No shared ownership needed | Move or borrow |
+| Scenario                         | Use                                 |
+| -------------------------------- | ----------------------------------- |
+| Shared ownership, multi-thread   | `Arc<T>`                            |
+| Shared ownership, single-thread  | `Rc<T>`                             |
+| Shared + mutable, multi-thread   | `Arc<Mutex<T>>` or `Arc<RwLock<T>>` |
+| Shared + mutable, single-thread  | `Rc<RefCell<T>>`                    |
+| Unique ownership, heap-allocated | `Box<T>`                            |
+| No shared ownership needed       | Move or borrow                      |
 
 ---
 
@@ -143,6 +143,7 @@ assert_eq!(std::mem::size_of::<Message>(), 32);  // Catch regressions
 **Clippy lint:** `clippy::large_enum_variant` catches this automatically.
 
 **When to box variants:**
+
 - Variant is >3x the size of other variants
 - Enum is stored in collections or passed frequently
 - The large variant is rarely used

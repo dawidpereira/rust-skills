@@ -263,9 +263,9 @@ trait with `Ext` suffix.
 
 | Reference                                       | Read When                                                                                                             |
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| [patterns.md](references/patterns.md)           | Implementing builders, choosing #[must_use]/#[non_exhaustive], extension traits, Default, common traits, serde gating |
-| [naming.md](references/naming.md)               | Naming methods, types, conversions, iterators, or crate names                                                         |
-| [documentation.md](references/documentation.md) | Writing doc comments, examples, error/panic/safety sections, intra-doc links, Cargo.toml metadata                     |
+| [api-patterns](references/patterns.md)           | Implementing builders, choosing #[must_use]/#[non_exhaustive], extension traits, Default, common traits, serde gating |
+| [api-naming](references/naming.md)               | Naming methods, types, conversions, iterators, or crate names                                                         |
+| [api-documentation](references/documentation.md) | Writing doc comments, examples, error/panic/safety sections, intra-doc links, Cargo.toml metadata                     |
 
 ---
 
