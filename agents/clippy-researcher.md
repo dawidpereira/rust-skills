@@ -8,7 +8,7 @@ Fetch Clippy lint documentation.
 
 ## URL
 
-`rust-lang.github.io/rust-clippy/stable/index.html#<lint_name>`
+`https://rust-lang.github.io/rust-clippy/stable/index.html#<lint_name>`
 
 ## Lint Categories
 

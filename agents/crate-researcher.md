@@ -10,8 +10,8 @@ Fetch crate metadata from the Rust ecosystem.
 
 Try in order:
 
-1. `lib.rs/crates/<name>` (preferred, richer metadata)
-2. `crates.io/crates/<name>` (fallback)
+1. `https://lib.rs/crates/<name>` (preferred, richer metadata)
+2. `https://crates.io/crates/<name>` (fallback)
 
 ## Output Format
 
@@ -25,7 +25,7 @@ Try in order:
 **Features:**
 - `feature1`: description
 
-**Links:** [docs.rs](docs.rs/<crate>) | [crates.io](crates.io/crates/<crate>) | [repo](<repo url>)
+**Links:** [docs.rs](https://docs.rs/<crate>) | [crates.io](https://crates.io/crates/<crate>) | [repo](<repo url>)
 ```
 
 ## Validation

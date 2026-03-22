@@ -71,7 +71,7 @@ provides a blanket impl that gives you `Into` for free:
 ```rust
 // Good: implement From
 impl From<UserId> for u64 {
-    fn from(id: UserId) -> u64 {
+    fn from(id: UserId) -> Self {
         id.0
     }
 }

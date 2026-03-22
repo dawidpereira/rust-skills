@@ -131,7 +131,7 @@ enum Message {
     Image(Box<[u8; 1024]>),   // 8 bytes (pointer)
     Quit,                      // 0 bytes
 }
-// Now Message is ~24 bytes
+// Now Message is ~32 bytes (down from ~1032)
 ```
 
 Check sizes with:

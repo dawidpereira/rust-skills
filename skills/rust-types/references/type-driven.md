@@ -48,12 +48,14 @@ Common validated types: `Email`, `NonEmptyString`, `Port`,
 ### Serde Integration
 
 ```rust
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
-#[derive(Debug, Clone, Serialize)]
+// Simple newtype: derive works directly
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct UserId(u64);
 
+// Validated newtype: manual Deserialize to enforce invariants
 impl<'de> Deserialize<'de> for Email {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let s = String::deserialize(d)?;

@@ -8,12 +8,12 @@ Fetch Rust release notes by version.
 
 ## URL
 
-`releases.rs/docs/<version>/`
+`https://releases.rs/docs/<version>/`
 
-Examples: `releases.rs/docs/1.85/`, `releases.rs/docs/1.84.1/`
+Examples: `https://releases.rs/docs/1.85/`, `https://releases.rs/docs/1.84.1/`
 
 Fallback:
-`blog.rust-lang.org/<year>/<month>/<day>/Rust-<version>.html`
+`https://blog.rust-lang.org/<year>/<month>/<day>/Rust-<version>.html`
 
 ## Output Format
 

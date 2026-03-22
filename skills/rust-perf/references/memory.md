@@ -73,7 +73,7 @@ use arrayvec::ArrayVec;
 fn parse_rgb(s: &str) -> ArrayVec<u8, 3> {
     let mut components = ArrayVec::new();
     for part in s.split(',').take(3) {
-        components.push(part.parse().unwrap());
+        components.push(part.parse().unwrap()); // panics on non-numeric input
     }
     components
 }

@@ -136,7 +136,7 @@ deterministic priority:
 
 ```rust
 tokio::select! {
-    biased;  // Check branches in order, not randomly
+    biased;  // Check branches in declaration order (default: fair random to prevent starvation)
     _ = shutdown.cancelled() => break,
     msg = rx.recv() => handle(msg),
 }
