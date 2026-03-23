@@ -267,3 +267,47 @@ if let Err(e) = send_notification() {
 
 **Clippy lint:** `clippy::let_underscore_must_use` catches
 ignored `#[must_use]` values.
+
+---
+
+## Batch Error Collection
+
+When processing a batch, sometimes you want all errors
+rather than failing on the first. Collect failures and
+report them together.
+
+```rust
+fn process_batch(items: &[Item]) -> Result<Vec<Output>, Vec<(ItemId, Error)>> {
+    let mut successes = Vec::with_capacity(items.len());
+    let mut errors = Vec::new();
+
+    for item in items {
+        match process_item(item) {
+            Ok(output) => successes.push(output),
+            Err(e) => errors.push((item.id, e)),
+        }
+    }
+
+    if errors.is_empty() {
+        Ok(successes)
+    } else {
+        Err(errors)
+    }
+}
+```
+
+With `itertools`, this is more concise:
+
+```rust
+use itertools::Itertools;
+
+let (successes, failures): (Vec<_>, Vec<_>) = items
+    .iter()
+    .map(process_item)
+    .partition_result();
+```
+
+Use for: data imports, config validation (report all
+issues at once), batch API operations. Don't use when
+the first error makes subsequent items invalid — fail
+fast with `?` instead.

@@ -221,7 +221,7 @@ my-project/
 | [references/testing.md](references/testing.md) | Unit tests, integration tests, proptest, mockall, criterion, tokio::test, RAII fixtures, doctests |
 | [references/linting.md](references/linting.md) | Clippy lint levels, pedantic config, workspace lints, missing_docs, unsafe docs, cargo fmt in CI |
 | [references/project.md](references/project.md) | lib/main split, feature modules, visibility, re-exports, prelude, workspaces, dependency inheritance |
-| [references/anti-patterns.md](references/anti-patterns.md) | Index of 15 common Rust anti-patterns with one-line descriptions |
+| [references/anti-patterns.md](references/anti-patterns.md) | 15 common anti-patterns with bad/good examples and "when acceptable" guidance |
 
 ## Cross-References
 
