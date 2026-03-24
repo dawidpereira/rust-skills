@@ -29,6 +29,7 @@ cascading, stop patching and reconsider the design.
 | rust-api | API design, builder patterns, naming conventions, documentation |
 | rust-perf | Memory optimization, compiler hints, profiling, benchmarking |
 | rust-quality | Testing, clippy lints, project structure, Cargo.toml defaults |
+| rust-architecture | Project structure patterns: vertical slices, TUI components, cross-feature communication |
 
 ## Cross-Reference Rule
 
