@@ -218,3 +218,288 @@ enum DbError { SelectUserFailed, InsertUserFailed, UpdateUserFailed, ... }
 // Good: one variant per failure mode
 enum DbError { Connection(sqlx::Error), Query(sqlx::Error), Migration(sqlx::Error) }
 ```
+
+---
+
+## Diagnostic Error Reporting
+
+### miette — Rich Diagnostic Errors
+
+Use `miette` when errors need to point at source code,
+configuration files, or user-authored input. Ideal for
+CLI tools, compilers, linters, and config parsers.
+
+#### Setup
+
+```toml
+[dependencies]
+miette = { version = "7", features = ["fancy"] }
+thiserror = "2"
+```
+
+`miette` works alongside `thiserror`. The `#[diagnostic]`
+derive adds rich metadata on top of standard `Error`.
+
+```rust
+use miette::{Diagnostic, SourceSpan, NamedSource};
+use thiserror::Error;
+
+#[derive(Error, Diagnostic, Debug)]
+#[error("invalid value in configuration")]
+#[diagnostic(
+    code(config::invalid_value),
+    help("expected a positive integer, got a string")
+)]
+pub struct ConfigError {
+    #[source_code]
+    pub src: NamedSource<String>,
+
+    #[label("this value is not valid")]
+    pub span: SourceSpan,
+}
+```
+
+#### Key Features
+
+| Feature | Attribute / Type | Purpose |
+|---------|-----------------|---------|
+| Source spans | `#[label("...")]` + `SourceSpan` | Points at the offending text |
+| Help text | `#[diagnostic(help("..."))]` | Suggests how to fix the error |
+| Error codes | `#[diagnostic(code(...))]` | Machine-readable error identifier |
+| Severity | `#[diagnostic(severity(...))]` | Warning vs error vs advice |
+| Related | `#[related]` | Attach additional diagnostics |
+
+#### Config Parser Example
+
+```rust
+use miette::{miette, NamedSource, SourceSpan, Result};
+
+fn parse_port(
+    src: &str,
+    filename: &str,
+    offset: usize,
+    len: usize,
+) -> Result<u16> {
+    let value = &src[offset..offset + len];
+    value.parse::<u16>().map_err(|_| {
+        miette!(
+            labels = vec![
+                miette::LabeledSpan::at(
+                    offset..offset + len,
+                    "expected a port number (0-65535)",
+                )
+            ],
+            help = "port must be a valid u16 integer",
+            "invalid port in {filename}"
+        )
+        .with_source_code(
+            NamedSource::new(filename, src.to_owned())
+        )
+    })
+}
+```
+
+#### Using miette::Result in main
+
+```rust
+fn main() -> miette::Result<()> {
+    let config = load_config("app.toml")?;
+    run(config)?;
+    Ok(())
+}
+```
+
+This renders fancy diagnostics to stderr with source
+snippets, labels, and help text when the `fancy` feature
+is enabled.
+
+---
+
+### color-eyre — Colorized Backtraces
+
+Use `color-eyre` as a drop-in replacement for `eyre`
+when developer experience during debugging matters. It
+adds colorized backtraces and integrates with `tracing`
+for span traces.
+
+#### Setup
+
+```toml
+[dependencies]
+color-eyre = "0.6"
+```
+
+Install the panic and error hooks at startup:
+
+```rust
+fn main() -> color_eyre::Result<()> {
+    color_eyre::install()?;
+
+    let config = load_config("app.toml")?;
+    run(config)?;
+    Ok(())
+}
+```
+
+#### Span Traces with tracing
+
+When `tracing` is active, `color-eyre` captures the
+current span stack and includes it in error reports:
+
+```rust
+use tracing::instrument;
+
+#[instrument(skip(db))]
+fn load_user(db: &Db, user_id: u64)
+    -> color_eyre::Result<User>
+{
+    let row = db.query_one(
+        "SELECT * FROM users WHERE id = $1",
+        &[&user_id],
+    )?;
+    Ok(User::from_row(row)?)
+}
+```
+
+Error output includes both the backtrace and the span
+trace showing `load_user{user_id=42}`, making it easier
+to reconstruct context.
+
+#### When to Choose color-eyre vs anyhow
+
+| Criterion | anyhow | color-eyre |
+|-----------|--------|------------|
+| Minimal dependencies | Yes | No (pulls in owo-colors, backtrace) |
+| Colorized output | No | Yes |
+| Span traces | No | Yes (with tracing) |
+| Ecosystem adoption | Wider | Smaller but growing |
+
+Use `anyhow` for libraries and lightweight CLIs. Use
+`color-eyre` for applications where developers are the
+primary audience for error output.
+
+---
+
+### User-Facing vs Developer-Facing Errors
+
+In web applications and APIs, errors serve two audiences:
+developers debugging the system and users consuming the
+API. Never leak internal details to users.
+
+#### Pattern: Dual-Layer Error
+
+```rust
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum AppError {
+    #[error("database query failed")]
+    Database(#[source] sqlx::Error),
+
+    #[error("user {0} not found")]
+    NotFound(u64),
+
+    #[error("invalid request: {0}")]
+    BadRequest(String),
+
+    #[error("internal error: {0}")]
+    Internal(#[from] anyhow::Error),
+}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        let (status, message) = match &self {
+            AppError::NotFound(_) => (
+                StatusCode::NOT_FOUND,
+                "resource not found".to_owned(),
+            ),
+            AppError::BadRequest(msg) => (
+                StatusCode::BAD_REQUEST,
+                msg.clone(),
+            ),
+            AppError::Database(_)
+            | AppError::Internal(_) => {
+                tracing::error!(error = %self, "internal error");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "internal server error".to_owned(),
+                )
+            }
+        };
+
+        (status, message).into_response()
+    }
+}
+```
+
+The `IntoResponse` impl controls what the user sees.
+Internal variants log the full error chain (including
+source) via `tracing` but return a generic message.
+
+#### Guidelines
+
+- **User-facing message**: generic, safe, actionable
+  ("invalid email format", "resource not found")
+- **Internal log**: full error chain with context
+  (`tracing::error!(error = %self, ...)`)
+- **Never expose**: stack traces, SQL queries, file
+  paths, internal IDs the user didn't provide
+
+---
+
+### CLI Error Reporting
+
+#### Exit Codes
+
+| Code | Meaning | Convention |
+|------|---------|------------|
+| 0 | Success | Program completed normally |
+| 1 | General error | Catch-all for failures |
+| 2 | Usage error | Bad arguments, missing flags |
+
+Scripts and CI pipelines rely on these conventions.
+Use `std::process::ExitCode` (Rust 1.61+) for explicit
+control:
+
+```rust
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("error: {e:#}");
+            ExitCode::from(1)
+        }
+    }
+}
+```
+
+#### stderr vs stdout
+
+- **stdout**: program output (data, results, piped content)
+- **stderr**: errors, warnings, progress, diagnostics
+
+This lets users pipe output while still seeing errors:
+`my-tool process data.csv > output.json`
+
+#### process::exit vs returning from main
+
+| Approach | Behavior |
+|----------|----------|
+| `return` from `main` | Runs destructors, flushes buffers |
+| `process::exit(1)` | Skips destructors — use only for fatal, unrecoverable situations |
+
+Prefer returning `ExitCode` from `main`. Use
+`process::exit` only when you need to bail from deeply
+nested code and cleanup is not needed.
+
+#### When to Show Backtraces
+
+- **Default**: show only the error message chain
+- **`--verbose` or `RUST_BACKTRACE=1`**: show full
+  backtrace for developer debugging
+- **Never** show backtraces to end users by default —
+  they obscure the actual problem

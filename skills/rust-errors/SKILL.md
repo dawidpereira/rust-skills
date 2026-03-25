@@ -49,6 +49,10 @@ If you're unsure, it's almost certainly expected — use `Result`.
 | Invariant violated (bug in code)           | `panic!` / `unreachable!`             | Should never happen in correct code    |
 | Test assertions                            | `unwrap()` / `expect()`               | Panics give clear test failures        |
 | One-off script / prototype                 | `anyhow::Result` in main              | Quick iteration, good error display    |
+| CLI tool with source-pointing errors       | `miette`                              | Rich diagnostics with labeled source spans and help text |
+| Application with colorized backtraces      | `color-eyre`                          | Enhanced eyre with span traces and color |
+| User-facing HTTP error                     | Custom `AppError` implementing `IntoResponse` | Safe message for users, full context in logs |
+| CLI exit codes                             | 0 = success, 1 = error, 2 = usage    | Convention that scripts and CI rely on |
 
 ---
 
@@ -161,15 +165,17 @@ program's logic is broken (invariant violation),
 | File                                               | Read When                                                                                       |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | [error-patterns](references/patterns.md)   | Setting up thiserror/anyhow, error chaining, #[from]/#[source], context patterns, documentation |
-| [error-decisions](references/decisions.md) | Deciding panic vs Result, designing custom error types, when-to-use-what scenarios              |
+| [error-decisions](references/decisions.md) | Deciding panic vs Result, designing custom error types, when-to-use-what scenarios, diagnostic crates (miette, color-eyre), user-facing vs internal errors, CLI exit codes |
 
 ---
 
 ## Cross-References
 
-| When                                      | Check                            |
-| ----------------------------------------- | -------------------------------- |
-| Error types involving ownership/lifetimes | rust-ownership → Quick Decisions |
-| Async error handling patterns             | rust-async → Quick Decisions     |
-| Documenting # Errors sections             | rust-api → Quick Decisions       |
-| Clippy lints for error handling           | rust-quality → Quick Decisions   |
+| When                                      | Check                                |
+| ----------------------------------------- | ------------------------------------ |
+| Error types involving ownership/lifetimes | rust-ownership → Quick Decisions     |
+| Async error handling patterns             | rust-async → Quick Decisions         |
+| Documenting # Errors sections             | rust-api → Quick Decisions           |
+| Clippy lints for error handling           | rust-quality → Quick Decisions       |
+| Error logging, span traces                | rust-tracing → Quick Decisions       |
+| Error responses in web handlers           | rust-architecture → Quick Decisions  |
