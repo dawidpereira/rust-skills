@@ -272,30 +272,31 @@ my-tui-app/
     ├── components/                # Shared/generic components
     │   ├── fps.rs
     │   └── status_bar.rs
+    ├── features.rs                # pub mod users; pub mod orders;
     ├── features/
-    │   ├── mod.rs
+    │   ├── users.rs               # Module root
     │   ├── users/
-    │   │   ├── mod.rs
-    │   │   ├── components/        # Feature-specific components
+    │   │   ├── components.rs      # Feature-specific components
+    │   │   ├── components/
     │   │   │   ├── user_list.rs
     │   │   │   └── user_detail.rs
     │   │   ├── service.rs
     │   │   ├── model.rs
     │   │   └── repository.rs
+    │   ├── orders.rs
     │   └── orders/
-    │       ├── mod.rs
+    │       ├── components.rs
     │       ├── components/
     │       │   └── order_table.rs
     │       ├── service.rs
     │       ├── model.rs
     │       └── repository.rs
+    ├── shared.rs
     ├── shared/
-    │   ├── mod.rs
     │   ├── db.rs
     │   ├── errors.rs
+    │   ├── models.rs              # Shared value objects and IDs
     │   └── config.rs
-    └── domain/
-        └── value_objects.rs
 ```
 
 **How the layers connect:** Feature components receive a reference

@@ -49,18 +49,18 @@ src/
 
 # Good: feature-based (cohesive)
 src/
+├── user.rs              # Module root
 ├── user/
-│   ├── mod.rs
 │   ├── model.rs
 │   ├── repository.rs
 │   ├── service.rs
 │   └── handler.rs
+├── order.rs
 ├── order/
-│   ├── mod.rs
 │   ├── model.rs
 │   └── service.rs
+├── shared.rs
 ├── shared/
-│   ├── mod.rs
 │   ├── error.rs
 │   └── database.rs
 └── lib.rs
@@ -94,32 +94,35 @@ When to add structure:
 Signs of over-structure: folders with 1-2 files, `mod.rs` that only re-exports,
 deep nesting for simple concepts.
 
-## mod.rs vs Adjacent File
+## Module File Convention
 
-Two styles for multi-file modules. Pick one and use it consistently.
+Two styles exist for multi-file modules. Prefer the adjacent
+file style (`name.rs` + `name/`) as the default — it avoids
+ambiguous `mod.rs` tabs in editors and is the convention
+encouraged by the Rust Reference since Rust 2018.
 
 ```
-# mod.rs style (complex modules)
+# Adjacent file style (recommended)
+src/
+├── user.rs           # Module root — sits next to user/
+└── user/
+    ├── model.rs
+    └── repository.rs
+
+# mod.rs style (alternative)
 src/user/
 ├── mod.rs
 ├── model.rs
 └── repository.rs
-
-# Adjacent file style (simple modules)
-src/
-├── user.rs           # Module root
-└── user/
-    ├── model.rs
-    └── repository.rs
 ```
 
 Enforce consistency with clippy:
 
 ```toml
 [lints.clippy]
-mod_module_files = "warn"          # Enforces mod.rs style
+self_named_module_files = "warn"   # Recommended: enforces name.rs style
 # OR
-self_named_module_files = "warn"   # Enforces adjacent style
+mod_module_files = "warn"          # Alternative: enforces mod.rs style
 ```
 
 ## Visibility: pub(crate)
@@ -173,7 +176,7 @@ pub(super) fn build_ast(input: &str) -> Ast {
     // ...
 }
 
-// src/parser/mod.rs
+// src/parser.rs — sits next to parser/
 mod lexer;
 mod ast;
 
@@ -184,10 +187,10 @@ pub fn parse(input: &str) -> Ast {
 
 ## pub use Re-Exports
 
-Create a clean public API by re-exporting from `mod.rs`:
+Create a clean public API by re-exporting from the module root:
 
 ```rust
-// src/user/mod.rs
+// src/user.rs — sits next to user/
 mod model;
 mod repository;
 mod service;

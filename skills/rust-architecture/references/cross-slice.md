@@ -114,43 +114,40 @@ at the database schema level, not at the Rust module level.
 
 ## Strategy 3: Shared Domain Types
 
-Put type-safe IDs and value objects in a shared `domain/` module.
+Put type-safe IDs and value objects in `shared/models.rs`.
 Both slices reference the same types without depending on each
 other's internals.
 
 ```rust
-// domain/ids.rs
+// shared/models.rs
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(transparent)]
-pub struct UserId(pub Uuid);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct UserId(Uuid);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(transparent)]
-pub struct ProductId(pub Uuid);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ProductId(Uuid);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(transparent)]
-pub struct OrderId(pub Uuid);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct OrderId(Uuid);
 ```
 
 ```rust
-// features/orders/model.rs — uses shared IDs
+// features/orders/models.rs — uses shared IDs
 
-use crate::domain::ids::{OrderId, UserId, ProductId};
+use crate::shared::models::{OrderId, UserId, ProductId};
 
 pub struct Order {
-    pub id: OrderId,
-    pub user_id: UserId,
-    pub items: Vec<OrderItem>,
-    pub status: OrderStatus,
+    id: OrderId,
+    user_id: UserId,
+    items: Vec<OrderItem>,
+    status: OrderStatus,
 }
 ```
 
-**Rule:** Only IDs and value objects go in `domain/`. Never full
-entities or business logic. If two slices need slightly different
-versions of a type, duplicate it rather than forcing a shared
-abstraction.
+**Rule:** Only IDs and value objects go in `shared/models.rs`.
+Never full entities or business logic. If two slices need
+slightly different versions of a type, duplicate it rather
+than forcing a shared abstraction.
 
 **When to use:** Almost always. Type-safe IDs prevent mixing up
 a `UserId` with a `ProductId` at compile time.

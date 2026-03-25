@@ -58,7 +58,9 @@ Then consider domain complexity:
   repository, dto, routes, tests).
 - **Complex domain logic** → VSA + CQRS commands/queries within
   each slice.
-- **Rich domain model** → Hexagonal architecture or DDD (planned).
+- **Rich domain model** → DDD building blocks within VSA slices.
+  See rust-ddd skill for aggregates, value objects, events,
+  repository separation.
 
 ---
 
@@ -109,8 +111,7 @@ workspace root.
 | [references/vertical-slices.md](references/vertical-slices.md) | Setting up a web API: slice structure, file responsibilities, root wiring, CQRS variant, workspace layout, shared infrastructure, common dependencies |
 | [references/cross-slice.md](references/cross-slice.md) | One feature needs data or behavior from another: 4 strategies (API traits, read models, shared types, domain events) with decision guide |
 | [references/tui-components.md](references/tui-components.md) | Building a Ratatui TUI: component trait, file structure, app loop, state management |
-| references/hexagonal.md | (Planned) Ports and adapters, trait-based boundaries, crate layout |
-| references/ddd.md | (Planned) Aggregates, value objects, domain events, bounded contexts in Rust |
+| rust-ddd skill | Rich domain models within slices: aggregates, value objects, domain events, repository separation. Use when domain complexity warrants DDD building blocks |
 
 ---
 
@@ -123,3 +124,4 @@ workspace root.
 | Error type design for shared error module | rust-errors → Quick Decisions |
 | Trait design for service boundaries and API traits | rust-types → Quick Decisions |
 | Public API design within slices, naming conventions | rust-api → Quick Decisions |
+| Rich domain model, aggregates, value objects, events | rust-ddd → Quick Decisions |

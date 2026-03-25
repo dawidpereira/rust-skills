@@ -9,7 +9,8 @@ Deleting a feature means removing one folder.
 
 ## Single-Crate Project Structure
 
-The standard starting point for an Axum API:
+The standard starting point for an Axum API. Uses `name.rs` + `name/`
+folder convention — never `mod.rs`.
 
 ```
 my-app/
@@ -20,10 +21,10 @@ my-app/
 │   ├── main.rs                    # Entry point, server bootstrap
 │   ├── lib.rs                     # Re-exports, AppState
 │   ├── router.rs                  # Merges all feature routers
-│   ├── features/                  # ★ Vertical slices
-│   │   ├── mod.rs
+│   ├── features.rs                # pub mod users; pub mod orders; ...
+│   ├── features/
+│   │   ├── users.rs               # pub mod handler; ... + pub fn router()
 │   │   ├── users/
-│   │   │   ├── mod.rs
 │   │   │   ├── handler.rs
 │   │   │   ├── service.rs
 │   │   │   ├── model.rs
@@ -31,23 +32,26 @@ my-app/
 │   │   │   ├── dto.rs
 │   │   │   ├── routes.rs
 │   │   │   └── tests.rs
-│   │   ├── orders/                # Same shape, different feature
+│   │   ├── orders.rs              # Same shape, different feature
+│   │   ├── orders/
 │   │   │   └── ...
-│   │   └── products/
-│   │       └── ...
-│   ├── shared/                    # Cross-cutting concerns
-│   │   ├── mod.rs
-│   │   ├── db.rs
-│   │   ├── errors.rs
-│   │   ├── auth.rs
-│   │   ├── middleware.rs
-│   │   └── config.rs
-│   └── domain/                    # Optional: shared value objects
-│       ├── mod.rs
-│       └── value_objects.rs
+│   │   └── products.rs
+│   │       ...
+│   ├── shared.rs                  # pub mod db; pub mod errors; ...
+│   └── shared/
+│       ├── db.rs
+│       ├── errors.rs
+│       ├── models.rs              # Shared value objects and IDs
+│       ├── auth.rs
+│       ├── middleware.rs
+│       └── config.rs
 └── tests/
     └── api_tests.rs
 ```
+
+Module root files (`features.rs`, `users.rs`, `shared.rs`) sit
+NEXT TO their corresponding folder and contain `pub mod`
+declarations.
 
 ---
 
@@ -55,9 +59,10 @@ my-app/
 
 Every slice has the same internal shape. Each file has one job.
 
-### mod.rs — Visibility gate
+### users.rs — Module root
 
 ```rust
+// features/users.rs — sits next to features/users/
 pub mod handler;
 pub mod service;
 pub mod model;
@@ -123,11 +128,14 @@ impl UserService {
 
 ### model.rs — Domain entity
 
-The source of truth for this feature's data. Derives `sqlx::FromRow`
-for database mapping but never appears in HTTP responses directly.
+The source of truth for this feature's data. Domain models do
+not derive `sqlx::FromRow` — the repository handles mapping.
+For rich domains where models diverge from DB schema, use
+separate DB row structs (see DDD Slice Variant below and the
+rust-ddd skill).
 
 ```rust
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: Uuid,
     pub email: String,
@@ -228,7 +236,7 @@ its route definitions.
 pub fn router(svc: Arc<UserService>) -> Router {
     Router::new()
         .route("/users", post(create_user).get(list_users))
-        .route("/users/:id", get(get_user).delete(delete_user))
+        .route("/users/{id}", get(get_user).delete(delete_user))
         .with_state(svc)
 }
 ```
@@ -302,32 +310,125 @@ pub fn create_router(pool: PgPool) -> Router {
 
 ---
 
+## DDD Slice Variant
+
+For features with rich domain logic — aggregates with invariants,
+status transitions, domain events — add DDD building blocks within
+the slice. The feature owns its aggregate, events, and domain errors
+alongside handlers and repositories.
+
+```
+features/
+├── orders.rs                    # Module root + router function
+├── orders/
+│   ├── models.rs                # Aggregate + entities + value objects
+│   ├── events.rs                # Domain event enum
+│   ├── error.rs                 # Domain error enum
+│   ├── repository.rs            # Repository trait (no sqlx imports)
+│   ├── create_order.rs          # Use case: handler + request/response DTO
+│   ├── cancel_order.rs          # Use case
+│   ├── ship_order.rs            # Use case
+│   ├── get_order.rs             # Query use case
+│   └── list_orders.rs           # Query use case
+```
+
+Key differences from the standard slice:
+
+- **models.rs** replaces model.rs — contains aggregate with private
+  fields, entities, and value objects. Business logic lives on the
+  aggregate (`order.place()`, `order.cancel()`), not in a service.
+- **events.rs** — Domain events collected by the aggregate, published
+  after saving.
+- **error.rs** — Feature-specific domain errors as a `thiserror` enum.
+- **File-per-use-case** replaces handler.rs + service.rs — each use
+  case file has its own handler function and DTOs.
+- **repository.rs** defines a trait with zero sqlx imports. The
+  implementation lives in `infrastructure/persistence/`.
+
+```
+infrastructure/
+├── persistence.rs
+├── persistence/
+│   ├── pg_order_repository.rs   # impl OrderRepository + DB row structs
+│   ├── pg_customer_repository.rs
+│   └── db.rs                    # Pool setup
+```
+
+The module root wires submodules and defines the router:
+
+```rust
+// features/orders.rs
+pub mod models;
+pub mod events;
+pub mod repository;
+pub mod error;
+
+pub mod create_order;
+pub mod cancel_order;
+pub mod ship_order;
+pub mod get_order;
+pub mod list_orders;
+
+use axum::{routing::{get, post, put}, Router};
+
+pub fn router() -> Router<crate::shared::AppState> {
+    Router::new()
+        .route("/orders", post(create_order::handle).get(list_orders::handle))
+        .route("/orders/{id}", get(get_order::handle))
+        .route("/orders/{id}/cancel", put(cancel_order::handle))
+        .route("/orders/{id}/ship", put(ship_order::handle))
+}
+```
+
+Use DDD slices when the domain has real invariants to enforce.
+For simple CRUD, the standard slice (handler + service + model)
+is sufficient. See the rust-ddd skill for complete code examples
+of aggregates, value objects, events, and repository separation.
+
+### Growth Rule
+
+Start flat within a feature — one `models.rs` file is fine until
+~300 lines. Then promote:
+
+```
+Stage 1: models.rs (~200 lines)
+  Single file with aggregate + entities + value objects
+
+Stage 2: models.rs → models/ (~300+ lines)
+  models.rs        becomes: pub mod order; pub mod order_item; pub mod value_objects;
+  models/
+    order.rs       aggregate only
+    order_item.rs  entity only
+    value_objects.rs
+
+Imports from outside the feature never change.
+```
+
+---
+
 ## CQRS Variant
 
 For slices with complex write logic, split into commands and queries:
 
 ```
-features/orders/
-├── mod.rs
-├── commands/
-│   ├── mod.rs
-│   ├── create_order/
-│   │   ├── command.rs             # CreateOrderCommand struct
-│   │   ├── handler.rs             # Executes the command
-│   │   └── validator.rs
-│   └── cancel_order/
-│       └── ...
-├── queries/
-│   ├── mod.rs
-│   ├── get_order/
-│   │   ├── query.rs
-│   │   ├── handler.rs
-│   │   └── response.rs
-│   └── list_orders/
-│       └── ...
-├── model.rs
-├── repository.rs
-└── routes.rs
+features/
+├── orders.rs
+├── orders/
+│   ├── commands.rs
+│   ├── commands/
+│   │   ├── create_order.rs
+│   │   │   # CreateOrderCommand + handler
+│   │   └── cancel_order.rs
+│   │       # ...
+│   ├── queries.rs
+│   ├── queries/
+│   │   ├── get_order.rs
+│   │   │   # query + handler + response
+│   │   └── list_orders.rs
+│   │       # ...
+│   ├── models.rs
+│   ├── repository.rs
+│   └── routes.rs
 ```
 
 Use CQRS when reads and writes have significantly different shapes
@@ -364,6 +465,7 @@ my-platform/
 │           ├── lib.rs
 │           ├── db.rs
 │           ├── errors.rs
+│           ├── models.rs
 │           └── config.rs
 └── migrations/
 ```
@@ -444,6 +546,9 @@ impl IntoResponse for AppError {
     }
 }
 ```
+
+For DDD projects, `AppError` includes `From` impls for each
+feature's domain errors. See rust-ddd → references/infrastructure.md.
 
 ### db.rs
 
