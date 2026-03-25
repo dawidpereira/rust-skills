@@ -22,17 +22,21 @@ cascading, stop patching and reconsider the design.
 | Skill | Use When |
 |-------|----------|
 | rust-ownership | Borrowing, lifetimes, smart pointers, move semantics, clone decisions |
-| rust-errors | Result, Option, error types, propagation, panic vs return |
-| rust-types | Generics, traits, dispatch, newtypes, typestate, PhantomData |
-| rust-async | Tokio, channels, Send/Sync, spawn, concurrency patterns |
+| rust-errors | Result, Option, error types, propagation, panic vs return, diagnostic crates (miette, color-eyre) |
+| rust-types | Generics, traits, dispatch, newtypes, typestate, PhantomData, closures, Fn traits, custom iterators |
+| rust-async | Tokio, channels, Send/Sync, spawn, streams, Pin, threads vs async, rayon, atomics |
 | rust-unsafe | Unsafe blocks, FFI, raw pointers, safety documentation |
+| rust-serde | Serde derive, custom serializers, enum representations, serde attributes, zero-copy deserialization, DTO patterns |
+| rust-macros | macro_rules!, proc macros, derive/attribute macros, fragment specifiers, repetition, hygiene, cargo expand |
 | rust-api | API design, builder patterns, naming conventions, documentation |
 | rust-perf | Memory optimization, compiler hints, profiling, benchmarking |
+| rust-database | sqlx, compile-time queries, migrations, connection pooling, transactions, newtype mapping, database testing |
 | rust-quality | Clippy lints, project structure, Cargo.toml defaults, proptest, mockall, criterion |
 | rust-tests | Unit test strategy, integration test organization, test builders, error path testing, test isolation |
-| rust-architecture | Project structure patterns: vertical slices, TUI components, cross-feature communication |
+| rust-architecture | Project structure: vertical slices, TUI components, cross-feature communication, Axum middleware/extractors |
 | rust-ddd | Domain-driven design: aggregates, entities, value objects, domain events, repository separation |
 | rust-tracing | Tracing setup, structured logging, spans, #[instrument], RUST_LOG, middleware, OpenTelemetry |
+| rust-ci-deploy | CI pipelines, GitHub Actions, caching, cross-compilation, Docker builds, release automation, cargo-dist |
 
 ## Cross-Reference Rule
 
