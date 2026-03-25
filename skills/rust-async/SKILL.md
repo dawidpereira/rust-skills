@@ -47,6 +47,13 @@ timers). CPU-heavy work blocks the runtime — move it to
 | Share latest value, skip intermediate   | `watch`             | Config updates, state sharing         |
 | Shared read-only data across tasks      | `Arc<T>`            | Clone Arc, not the data               |
 | Shared mutable state across tasks       | `Arc<Mutex<T>>`     | Or `Arc<RwLock<T>>` if reads dominate |
+| Stream of async values                  | `tokio_stream` + `StreamExt` | Async equivalent of Iterator |
+| Paginated API consumption               | `stream::unfold`    | Lazy, backpressure-aware page fetching |
+| CPU-bound data parallelism              | `rayon::par_iter`   | Automatic work-stealing across cores |
+| CPU-bound work in async context         | `spawn_blocking` + `rayon` | Keep the async runtime unblocked |
+| Scoped parallel work (no Arc)           | `std::thread::scope` | Borrows stack data safely across threads |
+| Atomic flag or counter                  | `AtomicBool` / `AtomicUsize` | Lock-free, single-word synchronization |
+| `async fn` in trait definition          | native async fn in traits | No `#[async_trait]` needed since Rust 1.75 |
 
 ---
 
@@ -115,6 +122,8 @@ and use `tokio::select!` to race work against
 | [references/tokio-patterns.md](references/tokio-patterns.md) | Runtime setup, spawn_blocking, join/select patterns, JoinSet, cancellation      |
 | [references/channels.md](references/channels.md)             | Choosing and using mpsc/broadcast/watch/oneshot, backpressure, message patterns |
 | [references/safety.md](references/safety.md)                 | Lock safety across await, Send/Sync issues, clone-before-await patterns         |
+| [references/streams.md](references/streams.md)               | Stream trait, StreamExt, Pin, async fn in traits, paginated/WebSocket patterns  |
+| [references/threads-and-parallelism.md](references/threads-and-parallelism.md) | std::thread, rayon, crossbeam, atomics, async-vs-threads decision |
 
 ---
 
@@ -127,3 +136,4 @@ and use `tokio::select!` to race work against
 | Async trait design and Send bounds           | rust-types → Quick Decisions     |
 | Tokio runtime profile settings               | rust-perf → Quick Decisions      |
 | Tracing spans in async code, .instrument()   | rust-tracing → Quick Decisions   |
+| Rayon, parallel iterators                    | rust-perf → Quick Decisions      |
