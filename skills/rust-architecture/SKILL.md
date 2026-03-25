@@ -32,6 +32,12 @@ across the entire codebase.
 | Terminal UI with interactive views | TUI component-based (Ratatui) | Each component owns state, rendering, input |
 | TUI app with business logic / data layers | TUI components + vertical slices | Feature slices own their components, services, and models |
 | Feature needs data from another | Cross-slice communication | Pick the lightest strategy that works |
+| Custom request validation | Axum extractor (`FromRequestParts`) | Compile-time enforced, reusable across handlers |
+| Simple middleware (logging, auth) | `axum::middleware::from_fn` | Minimal boilerplate, async-friendly |
+| Middleware ordering | outermost = first executed | CORS and tracing before auth, auth before handlers |
+| Shared state (DB pool, config) | `State<AppState>` with `FromRef` | Compile-time checked, no runtime downcasting |
+| Route-specific auth | `.route_layer(middleware::from_fn(require_auth))` | Protects only routes in that group |
+| Request/response transformation | Tower `Layer` implementation | Full control over Service wrapping |
 | Project has < 10 source files | Don't architect — flat structure | See rust-quality → Quick Decisions |
 
 ---
@@ -111,6 +117,7 @@ workspace root.
 | [references/vertical-slices.md](references/vertical-slices.md) | Setting up a web API: slice structure, file responsibilities, root wiring, CQRS variant, workspace layout, shared infrastructure, common dependencies |
 | [references/cross-slice.md](references/cross-slice.md) | One feature needs data or behavior from another: 4 strategies (API traits, read models, shared types, domain events) with decision guide |
 | [references/tui-components.md](references/tui-components.md) | Building a Ratatui TUI: component trait, file structure, app loop, state management |
+| [references/web-middleware.md](references/web-middleware.md) | Axum extractors (ordering, custom, rejection), tower middleware (from_fn, Layer, ordering), State vs Extension, auth patterns, CORS/compression/rate-limiting |
 | rust-ddd skill | Rich domain models within slices: aggregates, value objects, domain events, repository separation. Use when domain complexity warrants DDD building blocks |
 
 ---
@@ -125,3 +132,5 @@ workspace root.
 | Trait design for service boundaries and API traits | rust-types → Quick Decisions |
 | Public API design within slices, naming conventions | rust-api → Quick Decisions |
 | Rich domain model, aggregates, value objects, events | rust-ddd → Quick Decisions |
+| Request tracing middleware, correlation IDs | rust-tracing → Quick Decisions |
+| Rejection/error responses from extractors | rust-errors → Quick Decisions |
