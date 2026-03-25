@@ -45,6 +45,10 @@ automatically.
 | `rust-api` | API design, builders, naming, documentation standards |
 | `rust-perf` | Memory, compiler optimization, profiling |
 | `rust-quality` | Testing, linting, project structure, Cargo.toml |
+| `rust-tests` | Unit test strategy, integration tests, test builders |
+| `rust-architecture` | Project structure, vertical slices, TUI components |
+| `rust-ddd` | Domain-driven design, aggregates, value objects |
+| `rust-tracing` | Structured logging, spans, tracing setup, observability |
 
 ## Architecture
 

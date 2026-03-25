@@ -235,3 +235,5 @@ my-project/
   SIMD, and release profile tuning.
 - **Async patterns**: see the `rust-async` skill for tokio runtime, channels, cancellation,
   and structured concurrency.
+- **Logging and observability**: see the `rust-tracing` skill for tracing setup, structured
+  logging, `#[instrument]`, RUST_LOG, and OpenTelemetry integration.

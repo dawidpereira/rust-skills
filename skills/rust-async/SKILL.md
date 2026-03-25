@@ -126,3 +126,4 @@ and use `tokio::select!` to race work against
 | Error handling in async (try_join, ?)        | rust-errors → Quick Decisions    |
 | Async trait design and Send bounds           | rust-types → Quick Decisions     |
 | Tokio runtime profile settings               | rust-perf → Quick Decisions      |
+| Tracing spans in async code, .instrument()   | rust-tracing → Quick Decisions   |

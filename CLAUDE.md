@@ -32,6 +32,7 @@ cascading, stop patching and reconsider the design.
 | rust-tests | Unit test strategy, integration test organization, test builders, error path testing, test isolation |
 | rust-architecture | Project structure patterns: vertical slices, TUI components, cross-feature communication |
 | rust-ddd | Domain-driven design: aggregates, entities, value objects, domain events, repository separation |
+| rust-tracing | Tracing setup, structured logging, spans, #[instrument], RUST_LOG, middleware, OpenTelemetry |
 
 ## Cross-Reference Rule
 
