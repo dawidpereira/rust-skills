@@ -54,6 +54,13 @@ is the added type complexity worth the guarantee?
 | Fixed set of valid values (not strings) | Enum, not `&str` | Typos caught at compile time |
 | Heterogeneous collection | `Box<dyn Trait>` | Different concrete types, same interface |
 | Monomorphized hot path | `impl Trait` / generics | Zero-cost, no vtable dispatch |
+| Callback parameter | `impl Fn()` bound | Most flexible for callers, zero-cost |
+| Mutable callback | `impl FnMut()` bound | When the callback needs to mutate captured state |
+| One-shot callback (ownership) | `impl FnOnce()` bound | Callback consumes captured values |
+| Closures that cross threads | `move` + `Send + 'static` | Forces value capture for thread safety |
+| Storing mixed closures | `Box<dyn Fn()>` | Type erasure when closure types vary |
+| Custom collection iteration | implement `Iterator` + `IntoIterator` | Enables for loops and adapter chains |
+| Lazy transformation pipeline | iterator adapters (map, filter, flat_map) | Zero-allocation chains until collect |
 
 ---
 
@@ -150,6 +157,7 @@ bounds on impl blocks.
 | [references/generics.md](references/generics.md) | Working with generic bounds, Into/AsRef/From patterns, avoiding over-abstraction |
 | [references/type-driven.md](references/type-driven.md) | Designing newtypes, enums for states, PhantomData, parse-don't-validate, typestate |
 | [references/trait-design.md](references/trait-design.md) | Sealed traits, extension traits, object safety, common trait implementations |
+| [references/closures-and-iterators.md](references/closures-and-iterators.md) | Fn/FnMut/FnOnce traits, capture semantics, move closures, returning closures, custom Iterator/IntoIterator, FromIterator |
 
 ---
 
@@ -161,3 +169,5 @@ bounds on impl blocks.
 | Error types and Result patterns | rust-errors → Quick Decisions |
 | API design beyond type system (builders, naming) | rust-api → Quick Decisions |
 | FFI newtypes with #[repr(transparent)] | rust-unsafe → Quick Decisions |
+| Move closures for spawn, Send bounds | rust-async → Quick Decisions |
+| Iterator chains, lazy evaluation | rust-perf → Quick Decisions |
