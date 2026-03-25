@@ -350,6 +350,89 @@ function approach is simpler and sufficient.
 
 ---
 
+## Context-Aware Use Cases
+
+When a use case needs caller identity (multi-tenancy, audit
+logging, permission checks), add `RequestContext` as the first
+extractor argument and pass it to repository methods.
+
+`RequestContext` is a plain struct in `shared/context.rs` with
+no framework imports — just `uuid` and std. See
+rust-architecture → references/request-context.md for the full
+definition and extractor implementation.
+
+```rust
+// features/orders/repository.rs (context-aware variant)
+
+use crate::shared::context::RequestContext;
+
+#[async_trait]
+pub trait OrderRepository: Send + Sync {
+    async fn find_by_id(
+        &self,
+        ctx: &RequestContext,
+        id: OrderId,
+    ) -> Result<Option<Order>, RepositoryError>;
+
+    async fn save(
+        &self,
+        ctx: &RequestContext,
+        order: &Order,
+    ) -> Result<(), RepositoryError>;
+}
+```
+
+The handler extracts context and threads it through:
+
+```rust
+// features/orders/create_order.rs (context-aware variant)
+
+pub async fn handle(
+    ctx: RequestContext,
+    State(repo): State<Arc<dyn OrderRepository>>,
+    Json(body): Json<CreateOrderRequest>,
+) -> Result<impl IntoResponse, AppError> {
+    body.validate()?;
+    let items = map_to_domain(body.items)?;
+    let mut order = Order::create(
+        CustomerId::from_uuid(ctx.user_id), items, Currency::USD,
+    )?;
+
+    repo.save(&ctx, &order).await?;
+
+    let _events = order.take_events();
+    Ok((StatusCode::CREATED, Json(response)))
+}
+```
+
+```rust
+// features/orders/cancel_order.rs (context-aware variant)
+
+pub async fn handle(
+    ctx: RequestContext,
+    State(repo): State<Arc<dyn OrderRepository>>,
+    Path(order_id): Path<Uuid>,
+) -> Result<impl IntoResponse, AppError> {
+    let mut order = repo
+        .find_by_id(&ctx, OrderId::from_uuid(order_id))
+        .await?
+        .ok_or(AppError::NotFound("Order not found".into()))?;
+
+    order.cancel()?;
+    repo.save(&ctx, &order).await?;
+
+    let _events = order.take_events();
+    Ok(StatusCode::NO_CONTENT)
+}
+```
+
+The repository implementation uses `ctx.tenant_id` for scoped
+queries and `ctx.user_id` / `ctx.request_id` for audit logging.
+See rust-architecture → references/request-context.md for the
+full implementation with tenant scoping and audit trail.
+
+---
+
 ## Error Mapping
 
 Domain errors stay framework-free. The mapping to HTTP status

@@ -33,6 +33,7 @@ across the entire codebase.
 | TUI app with business logic / data layers | TUI components + vertical slices | Feature slices own their components, services, and models |
 | Feature needs data from another | Cross-slice communication | Pick the lightest strategy that works |
 | Custom request validation | Axum extractor (`FromRequestParts`) | Compile-time enforced, reusable across handlers |
+| Per-request context (user, tenant, correlation ID) | `RequestContext` extractor | Single struct, extracted once, threaded through layers |
 | Simple middleware (logging, auth) | `axum::middleware::from_fn` | Minimal boilerplate, async-friendly |
 | Middleware ordering | outermost = first executed | CORS and tracing before auth, auth before handlers |
 | Shared state (DB pool, config) | `State<AppState>` with `FromRef` | Compile-time checked, no runtime downcasting |
@@ -108,6 +109,12 @@ vertical slices — each feature owns its components + service + model.
 crate for infrastructure. Inherit dependencies and lints from
 workspace root.
 
+**Scenario 5:** "My handler knows the authenticated user but my
+repository doesn't"
+→ Define a `RequestContext` struct in `shared/context.rs`, extract
+it via `FromRequestParts`, pass `&ctx` to services and repository
+methods. See references/request-context.md.
+
 ---
 
 ## Reference Index
@@ -118,6 +125,7 @@ workspace root.
 | [references/cross-slice.md](references/cross-slice.md) | One feature needs data or behavior from another: 4 strategies (API traits, read models, shared types, domain events) with decision guide |
 | [references/tui-components.md](references/tui-components.md) | Building a Ratatui TUI: component trait, file structure, app loop, state management |
 | [references/web-middleware.md](references/web-middleware.md) | Axum extractors (ordering, custom, rejection), tower middleware (from_fn, Layer, ordering), State vs Extension, auth patterns, CORS/compression/rate-limiting |
+| [references/request-context.md](references/request-context.md) | Threading per-request identity through layers: RequestContext struct, extractor, context-aware repository traits, tenant scoping, audit logging, tracing integration |
 | rust-ddd skill | Rich domain models within slices: aggregates, value objects, domain events, repository separation. Use when domain complexity warrants DDD building blocks |
 
 ---

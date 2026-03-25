@@ -39,6 +39,7 @@ only through runtime discipline.
 | Feature-specific domain errors | `thiserror` enum per feature | Each feature owns its failure modes |
 | Loading aggregate from DB | `reconstitute()` associated function | Bypasses validation for trusted data, no spurious events |
 | Simple CRUD, no invariants | Standard VSA slice — skip DDD | DDD adds cost; use only when domain is rich |
+| Use case needs caller identity or tenant scope | Pass `RequestContext` to handler and repo | Domain stays framework-free; context is a plain struct in shared/ |
 
 ---
 
@@ -150,4 +151,5 @@ don't change.
 | Newtype patterns, parse-don't-validate, typestate | rust-types → Quick Decisions |
 | `thiserror` enum design, error propagation with `?` | rust-errors → Quick Decisions |
 | Async repository traits, tokio patterns | rust-async → Quick Decisions |
+| Request context propagation, tenant-scoped repos | rust-architecture → references/request-context.md |
 | Public API design, naming conventions | rust-api → Quick Decisions |

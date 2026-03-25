@@ -371,3 +371,32 @@ impl DraftOrder {
 The rule: if your enum has no variant data and your codebase
 is full of `== Status::X` comparisons, you're using a Rust
 enum like a C enum. Put the data and behavior on the variants.
+
+---
+
+## 14. Injecting Context at Repository Construction
+
+Creating a new repository instance per request to inject
+tenant or session context at construction time.
+
+```rust
+// Bad: new repo per request, defeats Arc sharing
+let repo = TenantScopedRepo::new(pool.clone(), tenant_id);
+let order = repo.find_by_id(id).await?;
+```
+
+Repositories are long-lived and shared via `Arc<dyn Trait>`.
+They hold a connection pool, not per-request state. Creating
+one per request defeats pool sharing and complicates DI wiring.
+
+```rust
+// Good: context flows as a method parameter
+repo.find_by_id(&ctx, id).await?;
+repo.save(&ctx, &order).await?;
+```
+
+Per-request data (`user_id`, `tenant_id`, `request_id`)
+belongs in method parameters, not constructor arguments. The
+repository implementation uses it for tenant-scoped queries
+and audit logging. See rust-architecture →
+references/request-context.md for the full pattern.
