@@ -107,10 +107,12 @@ Objects with identity. Two `OrderItem` instances with the same
 fields but different IDs are different entities.
 
 ```rust
+use crate::shared::models::ProductId;
+
 #[derive(Debug, Clone)]
 pub struct OrderItem {
     id: Uuid,
-    product_id: Uuid,
+    product_id: ProductId,
     product_name: String,
     quantity: Quantity,
     unit_price: Money,
@@ -118,7 +120,7 @@ pub struct OrderItem {
 
 impl OrderItem {
     pub fn new(
-        product_id: Uuid,
+        product_id: ProductId,
         name: String,
         qty: Quantity,
         price: Money,
@@ -133,7 +135,7 @@ impl OrderItem {
     }
 
     pub fn id(&self) -> Uuid { self.id }
-    pub fn product_id(&self) -> Uuid { self.product_id }
+    pub fn product_id(&self) -> ProductId { self.product_id }
     pub fn product_name(&self) -> &str { &self.product_name }
     pub fn quantity(&self) -> &Quantity { &self.quantity }
     pub fn unit_price(&self) -> &Money { &self.unit_price }
@@ -149,7 +151,7 @@ impl OrderItem {
     /// Reconstitute from DB — no validation, data already trusted
     pub(crate) fn reconstitute(
         id: Uuid,
-        product_id: Uuid,
+        product_id: ProductId,
         product_name: String,
         quantity: Quantity,
         unit_price: Money,
@@ -175,11 +177,12 @@ mutate state, and they enforce all invariants.
 
 ```rust
 use chrono::{DateTime, Utc};
+use crate::shared::models::CustomerId;
 
 #[derive(Debug)]
 pub struct Order {
     id: OrderId,
-    customer_id: Uuid,
+    customer_id: CustomerId,
     items: Vec<OrderItem>,
     status: OrderStatus,
     total: Money,
@@ -203,7 +206,7 @@ pub enum OrderStatus {
 ```rust
 impl Order {
     pub fn create(
-        customer_id: Uuid,
+        customer_id: CustomerId,
         items: Vec<OrderItem>,
         currency: Currency,
     ) -> Result<Self, OrderError> {
@@ -295,7 +298,7 @@ impl Order {
 ```rust
 impl Order {
     pub fn id(&self) -> OrderId { self.id }
-    pub fn customer_id(&self) -> Uuid { self.customer_id }
+    pub fn customer_id(&self) -> CustomerId { self.customer_id }
     pub fn status(&self) -> &OrderStatus { &self.status }
     pub fn total(&self) -> &Money { &self.total }
     pub fn items(&self) -> &[OrderItem] { &self.items }
@@ -322,7 +325,7 @@ publishes them. The aggregate never knows about the event bus.
 impl Order {
     pub(crate) fn reconstitute(
         id: OrderId,
-        customer_id: Uuid,
+        customer_id: CustomerId,
         items: Vec<OrderItem>,
         status: OrderStatus,
         total: Money,
@@ -356,14 +359,13 @@ handling via `match`.
 // features/orders/events.rs
 
 use super::models::OrderId;
-use crate::shared::models::Money;
-use uuid::Uuid;
+use crate::shared::models::{CustomerId, Money, ProductId};
 
 #[derive(Debug, Clone)]
 pub enum OrderEvent {
     Created {
         order_id: OrderId,
-        customer_id: Uuid,
+        customer_id: CustomerId,
         total: Money,
     },
     Placed {
@@ -371,7 +373,7 @@ pub enum OrderEvent {
     },
     ItemAdded {
         order_id: OrderId,
-        product_id: Uuid,
+        product_id: ProductId,
         quantity: u32,
     },
     Cancelled {

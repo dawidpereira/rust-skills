@@ -15,20 +15,22 @@ strategy for cross-slice business logic.
 ```rust
 // features/users/api.rs — the ONLY thing other slices see
 
+use crate::shared::models::UserId;
+
 #[async_trait]
 pub trait UserApi: Send + Sync {
-    async fn get_user_summary(&self, id: Uuid) -> Result<UserSummary>;
+    async fn get_user_summary(&self, id: UserId) -> Result<UserSummary>;
 }
 
 #[derive(Clone, Serialize)]
 pub struct UserSummary {
-    pub id: Uuid,
+    pub id: UserId,
     pub name: String,
     pub email: String,
 }
 
 impl UserApi for UserService {
-    async fn get_user_summary(&self, id: Uuid) -> Result<UserSummary> {
+    async fn get_user_summary(&self, id: UserId) -> Result<UserSummary> {
         let user = self.repo.find_by_id(id).await?;
         Ok(UserSummary { id: user.id, name: user.name, email: user.email })
     }
@@ -40,6 +42,8 @@ The consuming slice depends on the trait, injected via constructor:
 ```rust
 // features/orders/service.rs
 
+use crate::shared::models::OrderId;
+
 pub struct OrderService {
     repo: Arc<dyn OrderRepository>,
     user_api: Arc<dyn UserApi>,
@@ -47,7 +51,7 @@ pub struct OrderService {
 }
 
 impl OrderService {
-    pub async fn get_order_details(&self, id: Uuid) -> Result<OrderDetails> {
+    pub async fn get_order_details(&self, id: OrderId) -> Result<OrderDetails> {
         let order = self.repo.find_by_id(id).await?;
         let user = self.user_api.get_user_summary(order.user_id).await?;
         let products = self.product_api
@@ -66,7 +70,9 @@ mocking straightforward in tests.
 ## Strategy 2: Read Models (SQL JOINs)
 
 The consuming slice queries across tables directly and maps to
-its own flattened struct. Zero cross-slice Rust imports.
+its own flattened struct. Zero cross-slice Rust imports. Read
+models are flat SQL projections — raw column types are expected
+here, not domain newtypes.
 
 ```rust
 // features/orders/read_model.rs

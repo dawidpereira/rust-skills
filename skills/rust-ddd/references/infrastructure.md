@@ -86,7 +86,7 @@ Maps between DB rows and domain aggregates via `reconstitute`.
 
 use crate::features::orders::models::*;
 use crate::features::orders::repository::{OrderRepository, RepositoryError};
-use crate::shared::models::{Money, Currency};
+use crate::shared::models::{CustomerId, Money, Currency, ProductId};
 
 pub struct PgOrderRepository {
     pool: PgPool,
@@ -128,7 +128,7 @@ impl OrderRepository for PgOrderRepository {
                     .map_err(|e| RepositoryError::Technical(e.into()))?;
                 Ok(OrderItem::reconstitute(
                     r.id,
-                    r.product_id,
+                    ProductId::from_uuid(r.product_id),
                     r.product_name,
                     Quantity::new(qty)
                         .map_err(|e| RepositoryError::Technical(e.into()))?,
@@ -157,7 +157,7 @@ impl OrderRepository for PgOrderRepository {
 
         Ok(Some(Order::reconstitute(
             OrderId::from_uuid(row.id),
-            row.customer_id,
+            CustomerId::from_uuid(row.customer_id),
             items,
             status,
             total,
@@ -217,7 +217,7 @@ use validator::Validate;
 
 use super::models::{Order, OrderItem, Quantity};
 use super::repository::OrderRepository;
-use crate::shared::models::{Money, Currency};
+use crate::shared::models::{CustomerId, Money, Currency, ProductId};
 use crate::shared::errors::AppError;
 
 #[derive(Debug, Deserialize, Validate)]
@@ -254,11 +254,11 @@ pub async fn handle(
         .map(|i| {
             let qty = Quantity::new(i.quantity)?;
             let price = Money::new(i.unit_price_cents, Currency::USD)?;
-            Ok(OrderItem::new(i.product_id, i.product_name, qty, price))
+            Ok(OrderItem::new(ProductId::from_uuid(i.product_id), i.product_name, qty, price))
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    let mut order = Order::create(body.customer_id, items, Currency::USD)?;
+    let mut order = Order::create(CustomerId::from_uuid(body.customer_id), items, Currency::USD)?;
     repo.save(&order).await?;
 
     let _events = order.take_events();

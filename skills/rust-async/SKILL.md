@@ -93,7 +93,7 @@ entirely.
 
 **Scenario 1:** "I need to make 5 HTTP requests and combine the results"
 → Use `tokio::try_join!` for a fixed number, or
-`JoinSet` + `FuturesUnordered` for a dynamic number.
+`JoinSet` for a dynamic number.
 Don't await them sequentially — that's 5x slower.
 
 **Scenario 2:** "My async task needs to do JSON parsing on large payloads"

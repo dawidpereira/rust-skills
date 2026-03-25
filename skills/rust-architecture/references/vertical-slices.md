@@ -128,11 +128,17 @@ impl UserService {
 
 ### model.rs — Domain entity
 
-The source of truth for this feature's data. Domain models do
-not derive `sqlx::FromRow` — the repository handles mapping.
-For rich domains where models diverge from DB schema, use
-separate DB row structs (see DDD Slice Variant below and the
-rust-ddd skill).
+The source of truth for this feature's data. For simple CRUD
+features, domain models can use standard types and public fields
+directly. When a feature grows invariants or business rules,
+graduate to newtypes and private fields — see DDD Slice Variant
+below and the rust-ddd skill.
+
+Domain models do not derive `sqlx::FromRow`. For simple CRUD
+where the domain model matches the DB schema closely, `query_as!`
+maps columns directly. When the domain model diverges from the DB
+schema (newtypes, computed fields, status enums), use separate DB
+row structs — see DDD Slice Variant below and the rust-ddd skill.
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]

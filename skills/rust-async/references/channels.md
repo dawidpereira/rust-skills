@@ -13,7 +13,7 @@ let (tx, mut rx) = mpsc::channel::<Command>(100);
 for i in 0..4 {
     let tx = tx.clone();
     tokio::spawn(async move {
-        tx.send(Command::Process(i)).await.unwrap();
+        let _ = tx.send(Command::Process(i)).await;
     });
 }
 drop(tx);  // Drop the original so rx.recv() returns None when all tasks finish

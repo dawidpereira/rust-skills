@@ -130,7 +130,7 @@ Enforce with: `#![warn(clippy::undocumented_unsafe_blocks)]`
 |-----------|----------|
 | `#[repr(C)]` | Struct passed to/from C code |
 | `#[repr(transparent)]` | Newtype wrapper used in FFI (same ABI as inner type) |
-| `#[repr(u8)]` / `#[repr(i32)]` | Enum matching a C enum's underlying type |
+| `#[repr(u8)]` / `#[repr(c_int)]` | Enum matching a C enum's underlying type |
 | `#[repr(packed)]` | Matching a packed C struct (avoid — causes unaligned access) |
 
 ### Safe wrapper pattern

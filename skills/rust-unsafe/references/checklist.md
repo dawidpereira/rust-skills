@@ -148,11 +148,11 @@ with safe alternatives.
 ### CString lifetime trap
 
 ```rust
-// WRONG: CString is dropped, pointer dangles
+// Bad: CString is dropped, pointer dangles
 let ptr = CString::new("hello").unwrap().as_ptr();
 unsafe { use_ptr(ptr); }
 
-// RIGHT: CString lives long enough
+// Good: CString lives long enough
 let owned = CString::new("hello").unwrap();
 unsafe { use_ptr(owned.as_ptr()); }
 ```

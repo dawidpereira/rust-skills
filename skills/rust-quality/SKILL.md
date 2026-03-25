@@ -48,6 +48,7 @@ perf = "warn"
 opt-level = 3
 lto = "fat"
 codegen-units = 1
+panic = "abort"
 strip = true
 
 [profile.dev.package."*"]
@@ -225,13 +226,11 @@ my-project/
 
 ## Cross-References
 
-- **Error handling** patterns: see the `rust-error-handling` skill for `thiserror`, `anyhow`,
+- **Error handling** patterns: see the `rust-errors` skill for `thiserror`, `anyhow`,
   `Result<T, E>`, and error context chains.
-- **API design** patterns: see the `rust-api-design` skill for builder pattern, newtype,
-  `From`/`Into`, sealed traits, and `#[non_exhaustive]`.
-- **Performance** optimization: see the `rust-performance` skill for profiling, memory layout,
+- **API design** and naming conventions: see the `rust-api` skill for builder pattern, newtype,
+  `From`/`Into`, sealed traits, `#[non_exhaustive]`, and naming (references/naming.md).
+- **Performance** optimization: see the `rust-perf` skill for profiling, memory layout,
   SIMD, and release profile tuning.
-- **Naming conventions**: see the `rust-naming` skill for snake_case functions, CamelCase types,
-  and iterator naming conventions.
 - **Async patterns**: see the `rust-async` skill for tokio runtime, channels, cancellation,
   and structured concurrency.
