@@ -1,94 +1,21 @@
 # Testing Reference
 
-## Unit Tests: `#[cfg(test)] mod tests`
+For comprehensive unit and integration test strategy — module organization, test builders,
+error path testing, parameterized tests, test isolation, binary crate testing, and snapshot
+testing — see the **rust-tests** skill.
 
-Place unit tests in the same file as the code they test. The `#[cfg(test)]` attribute
-excludes test code from release builds. Use `use super::*` to access private items.
+This reference covers advanced testing tools: proptest, mockall, criterion, tokio::test,
+RAII fixtures, doctests, and `#[should_panic]`.
 
-```rust
-fn private_helper() -> i32 { 21 }
-
-pub fn public_api() -> i32 { private_helper() * 2 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn public_api_returns_42() {
-        assert_eq!(public_api(), 42);
-    }
-
-    #[test]
-    fn private_helper_returns_21() {
-        assert_eq!(private_helper(), 21);
-    }
-}
-```
-
-For larger test suites, nest submodules inside `mod tests` to group related tests
-(e.g., `mod parsing`, `mod validation`).
-
-## Descriptive Test Names
-
-Name tests so failures are self-explanatory. Pattern: `function_condition_expected_result`.
-
-```rust
-fn test_parse() { }                          // Bad: what about parsing?
-fn parse_returns_error_for_empty_input() { } // Good: self-documenting
-fn expired_token_is_rejected() { }           // Good: clear scenario
-```
-
-## Arrange, Act, Assert
-
-Structure every test with three clear sections:
-
-```rust
-#[test]
-fn order_total_includes_tax() {
-    // Arrange
-    let mut order = Order::new();
-    order.add_item(Item::new("Widget", 100.00));
-    let tax_rate = 0.10;
-
-    // Act
-    let total = order.calculate_total(tax_rate);
-
-    // Assert
-    assert_eq!(total, 100.00 * 1.10);
-}
-```
-
-Extract repeated arrange logic into helper functions within the test module.
-
-## Integration Tests
-
-Place integration tests in `tests/`. Each file compiles as a separate crate and can only
-access the public API.
-
-```
-my_project/
-├── src/lib.rs
-└── tests/
-    ├── common/mod.rs       # Shared test utilities
-    └── api_tests.rs
-```
-
-```rust
-// tests/api_tests.rs
-mod common;
-
-#[test]
-fn full_workflow_succeeds() {
-    let client = my_crate::Client::new(common::test_config());
-    assert!(client.process("input").is_ok());
-}
-```
+## Quick Reference: Test Commands
 
 ```bash
-cargo test --lib              # Unit tests only
-cargo test --test '*'         # Integration tests only
-cargo test --test api_tests   # Specific file
+cargo test                     # All non-ignored tests
+cargo test --lib               # Unit tests only
+cargo test --test '*'          # Integration tests only
+cargo test --test api_tests    # Specific integration test file
+cargo test -- --ignored        # Only ignored tests
+cargo test parse               # Tests with "parse" in the name
 ```
 
 ## Proptest: Property-Based Testing

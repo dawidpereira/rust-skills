@@ -28,7 +28,8 @@ cascading, stop patching and reconsider the design.
 | rust-unsafe | Unsafe blocks, FFI, raw pointers, safety documentation |
 | rust-api | API design, builder patterns, naming conventions, documentation |
 | rust-perf | Memory optimization, compiler hints, profiling, benchmarking |
-| rust-quality | Testing, clippy lints, project structure, Cargo.toml defaults |
+| rust-quality | Clippy lints, project structure, Cargo.toml defaults, proptest, mockall, criterion |
+| rust-tests | Unit test strategy, integration test organization, test builders, error path testing, test isolation |
 | rust-architecture | Project structure patterns: vertical slices, TUI components, cross-feature communication |
 | rust-ddd | Domain-driven design: aggregates, entities, value objects, domain events, repository separation |
 

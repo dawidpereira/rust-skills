@@ -1,11 +1,11 @@
 ---
 name: rust-quality
 description: >
-  Rust code quality — testing, linting, project structure, and anti-patterns. Use when setting
-  up tests (proptest, mockall, criterion), configuring clippy lints, organizing modules and
-  workspaces, or reviewing code for common Rust anti-patterns like excessive cloning or unwrap
-  abuse. Also use when setting up a new Rust project's Cargo.toml with recommended lint and
-  profile settings.
+  Rust code quality — linting, project structure, anti-patterns, and advanced testing tools.
+  Use when configuring clippy lints, organizing modules and workspaces, reviewing code for
+  common Rust anti-patterns like excessive cloning or unwrap abuse, or setting up proptest,
+  mockall, or criterion. Also use when setting up a new Rust project's Cargo.toml with
+  recommended lint and profile settings. For unit and integration test strategy, see rust-tests.
 ---
 
 # Rust Quality
@@ -19,7 +19,7 @@ description: >
 | Situation | Action |
 |-----------|--------|
 | New project | Apply default Cargo.toml settings below |
-| Adding a feature | Write tests first (unit + integration) |
+| Adding a feature | Write tests first — see rust-tests for unit/integration strategy |
 | Reviewing code | Check anti-patterns index |
 | Setting up CI | `cargo fmt --check && cargo clippy -- -D warnings && cargo test` |
 | Organizing modules | Feature-based, flat for small projects |
@@ -208,18 +208,17 @@ my-project/
 
 ### Scenario 3: Adding tests to existing code
 
-1. Unit tests: `#[cfg(test)] mod tests { use super::*; }` in the module file.
-2. Integration tests: `tests/` directory, testing only the public API.
-3. Property tests: `proptest!` for roundtrip, idempotence, and invariant properties.
-4. Mocking: extract dependencies into traits, use `mockall` for mock generation.
-5. Benchmarks: `criterion` in `benches/`, with `black_box` to prevent optimization.
-6. Async tests: `#[tokio::test]` for async functions.
+1. Decide test boundaries: see rust-tests → Quick Decisions for unit vs integration.
+2. Property tests: `proptest!` for roundtrip, idempotence, and invariant properties.
+3. Mocking: extract dependencies into traits, use `mockall` for mock generation.
+4. Benchmarks: `criterion` in `benches/`, with `black_box` to prevent optimization.
+5. Async tests: `#[tokio::test]` for async functions.
 
 ## Reference Index
 
 | Reference | Covers |
 |-----------|--------|
-| [references/testing.md](references/testing.md) | Unit tests, integration tests, proptest, mockall, criterion, tokio::test, RAII fixtures, doctests |
+| [references/testing.md](references/testing.md) | Proptest, mockall, criterion, tokio::test, RAII fixtures, doctests. For unit/integration test strategy and organization, see rust-tests |
 | [references/linting.md](references/linting.md) | Clippy lint levels, pedantic config, workspace lints, missing_docs, unsafe docs, cargo fmt in CI |
 | [references/project.md](references/project.md) | lib/main split, feature modules, visibility, re-exports, prelude, workspaces, dependency inheritance |
 | [references/anti-patterns.md](references/anti-patterns.md) | 15 common anti-patterns with bad/good examples and "when acceptable" guidance |
@@ -230,6 +229,8 @@ my-project/
   `Result<T, E>`, and error context chains.
 - **API design** and naming conventions: see the `rust-api` skill for builder pattern, newtype,
   `From`/`Into`, sealed traits, `#[non_exhaustive]`, and naming (references/naming.md).
+- **Unit & integration testing** strategy: see the `rust-tests` skill for test boundaries,
+  module organization, test builders, error path testing, and integration test isolation.
 - **Performance** optimization: see the `rust-perf` skill for profiling, memory layout,
   SIMD, and release profile tuning.
 - **Async patterns**: see the `rust-async` skill for tokio runtime, channels, cancellation,
