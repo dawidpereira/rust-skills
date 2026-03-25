@@ -2,6 +2,23 @@
 
 ## 2026-03-25
 
+### Expanded
+
+- **rust-ddd** — Added enum sum types (data-carrying variants, behavior
+  on enums, `Option`/`Result` as sum types) and typestate patterns
+  (compile-time state machine enforcement via separate structs). New
+  anti-pattern: treating Rust enums as C-style labels.
+
+- **rust-architecture** — Added request context propagation pattern
+  (`RequestContext` struct, `FromRequestParts` extractor, context-aware
+  repository traits, tenant scoping, audit logging, tracing integration).
+  New reference: request-context.
+
+- **rust-ddd** — Added context-aware use case patterns (threading
+  `RequestContext` through handlers and repository methods for
+  multi-tenancy and audit). New anti-pattern: injecting context at
+  repository construction time.
+
 ### Added
 
 - **rust-serde** — Serialization and deserialization with serde.
