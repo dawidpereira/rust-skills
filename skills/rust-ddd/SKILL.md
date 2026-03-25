@@ -54,10 +54,16 @@ only through runtime discipline.
    `&mut self` on command methods means one writer at a time.
    The compiler enforces what Java achieves with `synchronized`.
 
-3. **Enums replace class hierarchies.** `OrderStatus`,
-   `OrderEvent`, `OrderError` — all enums. The compiler forces
-   exhaustive handling via `match`. No visitor pattern, no
-   `instanceof`.
+3. **Enums are sum types, not labels.** Rust enums are tagged
+   unions — each variant can carry different data. They are the
+   same construct as `Option` and `Result`: algebraic sum types
+   with monadic combinators (`.map()`, `.and_then()`, `?`).
+   `OrderStatus`, `OrderEvent`, `OrderError` — all enums. The
+   compiler forces exhaustive handling via `match`. When state
+   determines which operations are valid, consider making the
+   aggregate itself an enum (typestate) so invalid transitions
+   are compile errors, not runtime `Result`s. See
+   references/building-blocks.md § "Enums Beyond Labels".
 
 4. **Value objects are newtypes.** Never pass raw `String`,
    `i64`, or `Uuid` for domain concepts. `OrderId(Uuid)`,

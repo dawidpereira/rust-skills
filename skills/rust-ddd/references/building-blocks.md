@@ -414,6 +414,154 @@ Domain Events).
 
 ---
 
+## Enums Beyond Labels: Sum Types in DDD
+
+### Rust Enum ≠ C#/Java Enum
+
+In C#, Java, or Go an enum is a named integer — a closed set
+of labels with no data. Rust's `enum` is a **tagged union**
+(algebraic sum type): each variant can carry completely
+different data, and `match` destructures it exhaustively.
+
+`Option<T>` and `Result<T, E>` are enums. They expose monadic
+combinators — `.map()`, `.and_then()` (flatmap/bind), `?`
+(short-circuit on `None`/`Err`). Every enum you define has the
+same potential.
+
+This matters for DDD because domain states, events, and errors
+should be modeled as sum types with per-variant data — not flat
+labels checked with `if status == X` scattered across the
+codebase.
+
+### Typestate Aggregates
+
+The standard approach puts status in a field:
+
+```rust
+struct Order {
+    status: OrderStatus,
+    // ...
+}
+
+impl Order {
+    pub fn ship(&mut self) -> Result<(), OrderError> {
+        match self.status {
+            OrderStatus::Paid => { /* ok */ }
+            _ => return Err(OrderError::InvalidTransition(
+                self.status, OrderStatus::Shipped,
+            )),
+        }
+        // ...
+    }
+}
+```
+
+This works, but `ship()` is callable on any `Order` — the
+compiler can't prevent calling it on a draft. The typestate
+approach makes the **aggregate itself** an enum:
+
+```rust
+pub struct DraftOrder {
+    id: OrderId,
+    items: Vec<OrderItem>,
+    total: Money,
+    events: Vec<OrderEvent>,
+}
+
+pub struct PlacedOrder {
+    id: OrderId,
+    items: Vec<OrderItem>,
+    total: Money,
+    events: Vec<OrderEvent>,
+}
+
+pub struct ShippedOrder {
+    id: OrderId,
+    items: Vec<OrderItem>,
+    total: Money,
+    tracking: String,
+    events: Vec<OrderEvent>,
+}
+
+impl DraftOrder {
+    pub fn place(mut self) -> Result<PlacedOrder, OrderError> {
+        if self.items.is_empty() {
+            return Err(OrderError::EmptyOrder);
+        }
+        self.events.push(OrderEvent::Placed { order_id: self.id });
+        Ok(PlacedOrder {
+            id: self.id,
+            items: self.items,
+            total: self.total,
+            events: self.events,
+        })
+    }
+}
+
+impl PlacedOrder {
+    pub fn ship(mut self, tracking: String) -> ShippedOrder {
+        self.events.push(OrderEvent::Shipped {
+            order_id: self.id,
+            tracking_number: tracking.clone(),
+        });
+        ShippedOrder {
+            id: self.id,
+            items: self.items,
+            total: self.total,
+            tracking,
+            events: self.events,
+        }
+    }
+}
+```
+
+Now `ship()` only exists on `PlacedOrder`. Calling it on a
+draft is a **compile error**, not a runtime check.
+
+Wrap the variants when you need a single type for storage or
+collections:
+
+```rust
+pub enum Order {
+    Draft(DraftOrder),
+    Placed(PlacedOrder),
+    Shipped(ShippedOrder),
+}
+```
+
+### When to Use Typestate vs Status Field
+
+| Use | When |
+|-----|------|
+| **Status field** | Most operations are state-independent, few transitions, simple CRUD-like domain |
+| **Typestate** | State determines which operations exist, transitions carry different data, strict state machine |
+
+Start with a status field. Promote to typestate when you find
+yourself writing `match self.status` guards in most command
+methods — that's the signal that the type system should enforce
+the machine.
+
+### Monadic Composition on Domain Results
+
+Domain operations return `Result`. Chain them instead of
+sequential imperative mutation:
+
+```rust
+let order = DraftOrder::new(customer_id, items, currency)?;
+let placed = order
+    .validate_inventory(&stock)
+    .and_then(|o| o.apply_discount(code))
+    .and_then(|o| o.place())?;
+```
+
+Each step returns a `Result` — potentially with a different
+`Ok` type as the aggregate transitions through states. The `?`
+at the end short-circuits on the first error. This is the same
+bind/flatmap that makes `Option` and `Result` monadic, applied
+to your domain types.
+
+---
+
 ## Domain Errors
 
 One `thiserror` enum per feature. Each variant carries the

@@ -310,3 +310,64 @@ features/
 `orders.rs` sits NEXT TO its `orders/` folder and contains
 `pub mod` declarations. See rust-architecture for the full
 convention.
+
+---
+
+## 13. Treating Enums as C-Style Labels
+
+Using flat enums with no data and scattering `if status == X`
+checks across services and handlers. This ignores Rust's enum
+as a sum type and recreates the C#/Java pattern.
+
+```rust
+// Bad: flat labels, external checks everywhere
+#[derive(PartialEq)]
+pub enum OrderStatus { Draft, Placed, Shipped }
+
+// In service.rs
+if order.status() == &OrderStatus::Draft {
+    // do draft things
+}
+
+// In handler.rs (same check, duplicated)
+if order.status() == &OrderStatus::Draft {
+    // do other draft things
+}
+```
+
+```rust
+// Good: data-carrying variants with behavior on the enum
+pub enum OrderState {
+    Draft { items: Vec<OrderItem> },
+    Placed { items: Vec<OrderItem>, placed_at: DateTime<Utc> },
+    Shipped { tracking: String, shipped_at: DateTime<Utc> },
+}
+
+impl OrderState {
+    pub fn can_cancel(&self) -> bool {
+        matches!(self, Self::Draft { .. } | Self::Placed { .. })
+    }
+
+    pub fn place(self) -> Result<Self, OrderError> {
+        match self {
+            Self::Draft { items } => Ok(Self::Placed {
+                items,
+                placed_at: Utc::now(),
+            }),
+            _ => Err(OrderError::InvalidTransition),
+        }
+    }
+}
+```
+
+```rust
+// Advanced: typestate — invalid transitions are compile errors
+impl DraftOrder {
+    pub fn place(self) -> Result<PlacedOrder, OrderError> { /* ... */ }
+}
+// PlacedOrder has no `place()` — calling it won't compile
+```
+
+The rule: if your enum has no variant data and your codebase
+is full of `== Status::X` comparisons, you're using a Rust
+enum like a C enum. Put the data and behavior on the variants.

@@ -107,6 +107,11 @@ match account.status {
 }
 ```
 
+For domain aggregates where state determines which operations
+are valid, consider making the aggregate itself an enum
+(typestate pattern). See rust-ddd → references/building-blocks.md
+§ "Enums Beyond Labels" for full examples.
+
 ---
 
 ## Option and Result as Type-Level Contracts
